@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en-NG">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
+<meta name="description" content="TWC Labs Outreach Tracker — NDPA & NDHA compliant clinical outreach PWA">
+<meta name="theme-color" content="#0D5C63">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TWC Outreach">
+<meta name="format-detection" content="telephone=no">
+
+<title>TWC Labs Outreach Tracker</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash" class="splash">
+  <img src="icons/icon-192.png" alt="TWC Labs" class="splash-logo">
+  <h1 class="splash-title">TWC Labs</h1>
+  <p class="splash-sub">Outreach Tracker</p>
+  <div class="splash-loader"></div>
+  <p class="splash-foot">NDPA · NDHA Compliant</p>
+</div>
+
+<!-- APP -->
+<div id="app" class="app-root hidden">
+
+  <header class="top-nav" role="banner">
+    <div class="nav-left">
+      <img src="icons/icon-192.png" alt="" class="nav-logo">
+      <div class="nav-brand-text">
+        <span class="nav-brand-name">TWC Labs</span>
+        <span class="nav-brand-sub">Outreach Tracker</span>
+      </div>
+    </div>
+    <nav class="nav-center" id="desktopNavLinks" aria-label="Main navigation"></nav>
+    <div class="nav-right">
+      <span id="networkStatusBadge" class="net-badge net-online" role="status">
+        <span class="net-dot"></span> Online
+      </span>
+      <button id="pwaInstallBtn" class="btn-install hidden" onclick="triggerPwaInstall()" aria-label="Install app">
+        <span>📲</span> Install
+      </button>
+      <button id="userChip" class="user-chip" onclick="handleHeaderUserClick()" aria-label="User menu">
+        <span id="userInitial" class="user-init">T</span>
+        <span id="userRoleLabel" class="user-role">Portal</span>
+      </button>
+    </div>
+  </header>
+
+  <div id="browserInstallBanner" class="install-banner hidden">
+    <span class="install-banner-text">📲 Install TWC Outreach: tap <strong>Share → Add to Home Screen</strong></span>
+    <button class="install-banner-close" onclick="dismissInstallBanner()" aria-label="Dismiss">✕</button>
+  </div>
+
+  <main id="mainWorkspace" class="workspace" role="main">
+    <div id="loader" class="loader hidden" aria-live="polite">
+      <div class="loader-spinner"></div>
+      <p id="loaderMessage" class="loader-msg">Processing...</p>
+    </div>
+
+    <!-- AUTH -->
+    <section id="authSection" class="auth-section hidden">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <img src="icons/icon-192.png" alt="TWC Labs" class="auth-logo">
+          <h2>TWC Labs Outreach Portal</h2>
+          <p class="auth-tag">Clinical Surveillance · NDPA &amp; NDHA Compliant</p>
+        </div>
+
+        <div class="compliance-notice" role="note">
+          <span class="notice-icon">🔒</span>
+          <div>
+            <strong>Data Protection Notice</strong>
+            <p>All patient data is processed under the Nigeria Data Protection Act (NDPA) 2023 and aligned with the National Digital Health Architecture (NDHA). Access is role-restricted and audited.</p>
+          </div>
+        </div>
+
+        <div class="credential-box">
+          <div class="cred-title">🔑 Quick Demo Access</div>
+          <div class="cred-grid">
+            <button type="button" class="cred-btn" onclick="quickFillLogin('twzlabz@gmail.com','Admin@TWC2026!')"><span class="cred-role">👑 Super-Admin</span></button>
+            <button type="button" class="cred-btn" onclick="quickFillLogin('coordinator@twcmedcrm.org','Admin@TWC2026!')"><span class="cred-role">📋 Coordinator</span></button>
+            <button type="button" class="cred-btn" onclick="quickFillLogin('nurse@twcmedcrm.org','Admin@TWC2026!')"><span class="cred-role">🩺 Nurse</span></button>
+            <button type="button" class="cred-btn" onclick="quickFillLogin('lab@twcmedcrm.org','Admin@TWC2026!')"><span class="cred-role">🧪 Lab</span></button>
+            <button type="button" class="cred-btn" onclick="quickFillLogin('eye@twcmedcrm.org','Admin@TWC2026!')"><span class="cred-role">👁️ Eye</span></button>
+            <button type="button" class="cred-btn" onclick="quickFillLogin('dental@twcmedcrm.org','Admin@TWC2026!')"><span class="cred-role">🦷 Dental</span></button>
+          </div>
+          <p class="cred-hint">Temp password: <code>Admin@TWC2026!</code></p>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLoginSubmit(event)" novalidate>
+          <div class="field">
+            <label for="loginEmail">Email Address</label>
+            <input type="email" id="loginEmail" inputmode="email" autocomplete="username" placeholder="you@twcmedcrm.org" required>
+          </div>
+          <div class="field">
+            <div class="field-row">
+              <label for="loginPassword">Password</label>
+              <button type="button" class="link-btn" onclick="togglePasswordVisibility('loginPassword')">Show</button>
+            </div>
+            <input type="password" id="loginPassword" autocomplete="current-password" placeholder="••••••••" required>
+          </div>
+          <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-block">
+            <span class="btn-label">Sign In</span>
+          </button>
+        </form>
+
+        <div class="auth-foot">
+          <button type="button" class="link-btn" onclick="handleResetAdminPassword()">🔄 Reset Super-Admin Password</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="passwordChangeSection" class="auth-section hidden">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <img src="icons/icon-192.png" alt="TWC Labs" class="auth-logo">
+          <h2>Set Your Secure Password</h2>
+          <p class="auth-tag text-danger">Mandatory — NDPA Data Controller Requirement</p>
+        </div>
+        <form id="pwdChangeForm" onsubmit="handlePasswordChangeSubmit(event)">
+          <div class="field">
+            <label for="newPasswordInput">New Password (min 8 chars)</label>
+            <input type="password" id="newPasswordInput" required minlength="8" autocomplete="new-password">
+          </div>
+          <div class="field">
+            <label for="confirmPasswordInput">Confirm Password</label>
+            <input type="password" id="confirmPasswordInput" required minlength="8" autocomplete="new-password">
+          </div>
+          <div class="pwd-strength" id="pwdStrength"></div>
+          <button type="submit" class="btn btn-primary btn-block">Save Password &amp; Continue</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="superAdminView"   class="view hidden"></section>
+    <section id="coordinatorView"  class="view hidden"></section>
+    <section id="nurseView"        class="view hidden"></section>
+    <section id="labView"          class="view hidden"></section>
+    <section id="eyeView"          class="view hidden"></section>
+    <section id="dentalView"       class="view hidden"></section>
+  </main>
+
+  <nav id="mobileBottomNav" class="tab-bar" role="navigation" aria-label="Mobile navigation"></nav>
+
+  <div id="universalModal" class="modal-mask hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-sheet">
+      <div class="modal-grabber"></div>
+      <div class="modal-head">
+        <h3 id="modalTitle">Dialog</h3>
+        <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <div id="offlineOverlay" class="offline-overlay hidden">
+    <div class="offline-card">
+      <span class="offline-icon">📡</span>
+      <h3>You're Offline</h3>
+      <p>Cached shell is available. New entries will sync when you reconnect.</p>
+      <button class="btn btn-primary" onclick="location.reload()">Retry</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
