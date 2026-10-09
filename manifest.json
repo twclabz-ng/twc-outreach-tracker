@@ -1,0 +1,52 @@
+{
+  "id": "/twc-outreach/",
+  "name": "TWC Labs Outreach Tracker",
+  "short_name": "TWC Outreach",
+  "description": "Clinical Outreach, Epidemiological Surveillance & Referral Management — NDPA & NDHA Compliant",
+  "start_url": "/twc-outreach/?source=pwa",
+  "scope": "/twc-outreach/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#0A2A3A",
+  "theme_color": "#0D5C63",
+  "lang": "en-NG",
+  "dir": "ltr",
+  "categories": ["medical", "health", "productivity"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "icons/icon-72.png",       "sizes": "72x72",   "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-96.png",       "sizes": "96x96",   "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-128.png",      "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-144.png",      "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-152.png",      "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192.png",      "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-384.png",      "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png",      "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-192.png",  "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/maskable-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nurse Station",
+      "short_name": "Vitals",
+      "description": "Capture patient vital signs",
+      "url": "/twc-outreach/?view=nurse",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Lab Station",
+      "short_name": "Lab",
+      "description": "Record blood glucose results",
+      "url": "/twc-outreach/?view=lab",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Enroll Patient",
+      "short_name": "Enroll",
+      "description": "Register a new patient under NDPA",
+      "url": "/twc-outreach/?action=register",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
