@@ -1,11 +1,10 @@
 /* ============================================================================
- * TWC Labs Outreach — Client Controller (GitHub Pages ↔ GAS)
+ * TWC Labs Outreach — Client Controller
+ * Backend: Google Apps Script Web App
  * ========================================================================== */
 
-// ⚠️⚠️⚠️  PASTE YOUR DEPLOYED GAS WEB APP URL HERE  ⚠️⚠️⚠️
-const API_URL = 'https://script.google.com/macros/s/AKfycb...REPLACE_ME.../exec';
-
-// =============================================================================
+// ✅ YOUR DEPLOYED GAS WEB APP URL (already wired in)
+const API_URL = 'https://script.google.com/macros/s/AKfycbzbMeYp0KgJhINRkEuzgihcM48LOD1vNPKgs2gL_7ehgW8ISRhUQUqcBMtZZSez057V/exec';
 
 const state = {
   currentUser: null,
@@ -19,10 +18,7 @@ const state = {
 };
 
 /* -------------------------------------------------------------------------
- * API BRIDGE
- *   - Uses text/plain to avoid CORS preflight
- *   - Uses redirect: 'follow' for GAS → googleusercontent redirect
- *   - 30s timeout
+ * API BRIDGE — text/plain body avoids CORS preflight
  * ---------------------------------------------------------------------- */
 async function api(action, payload = {}) {
   const controller = new AbortController();
@@ -37,21 +33,19 @@ async function api(action, payload = {}) {
       signal: controller.signal
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status} ${response.statusText}`);
-    }
+    if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}`);
 
     const text = await response.text();
     try {
       return JSON.parse(text);
     } catch (parseErr) {
       console.error('Non-JSON response:', text.substring(0, 300));
-      throw new Error('Backend returned invalid JSON. Check your GAS deployment.');
+      throw new Error('Backend returned invalid JSON. Verify your GAS deployment access is set to "Anyone".');
     }
   } catch (err) {
     if (err.name === 'AbortError') throw new Error('Request timed out. Check your connection.');
     if (err.message.includes('Failed to fetch')) {
-      throw new Error('Cannot reach backend. Verify your GAS Web App URL and that access is set to "Anyone".');
+      throw new Error('Cannot reach backend. Verify the GAS Web App URL and that access is set to "Anyone".');
     }
     throw err;
   } finally {
@@ -60,14 +54,13 @@ async function api(action, payload = {}) {
 }
 
 /* -------------------------------------------------------------------------
- * SERVICE WORKER REGISTRATION
+ * SERVICE WORKER
  * ---------------------------------------------------------------------- */
 async function registerSW() {
   if (!('serviceWorker' in navigator) || location.protocol !== 'https:') return;
   try {
     const reg = await navigator.serviceWorker.register('sw.js', { scope: './' });
     console.log('✓ SW registered:', reg.scope);
-    // Auto-update on new deployment
     reg.addEventListener('updatefound', () => {
       const sw = reg.installing;
       sw?.addEventListener('statechange', () => {
@@ -149,7 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initInstall();
   setupNetwork();
   checkSession();
-
   setTimeout(() => document.getElementById('splash')?.remove(), 2200);
 });
 
@@ -274,7 +266,7 @@ function handleHeaderUserClick() {
 }
 
 /* -------------------------------------------------------------------------
- * RENDER PIPELINE
+ * APP RENDER
  * ---------------------------------------------------------------------- */
 function renderApp() {
   hideSplash();
@@ -310,10 +302,10 @@ function renderNav(role) {
       { k: 'eye', icon: '👁️', label: 'Eye' },
       { k: 'dental', icon: '🦷', label: 'Dental' }
     ],
-    nurse:      [{ k: 'nurse',  icon: '🩺', label: 'Vitals' }],
-    lab_tech:   [{ k: 'lab',    icon: '🧪', label: 'Lab' }],
-    optometrist:[{ k: 'eye',    icon: '👁️', label: 'Eye' }],
-    dentist:    [{ k: 'dental', icon: '🦷', label: 'Dental' }]
+    nurse:       [{ k: 'nurse',  icon: '🩺', label: 'Vitals' }],
+    lab_tech:    [{ k: 'lab',    icon: '🧪', label: 'Lab' }],
+    optometrist: [{ k: 'eye',    icon: '👁️', label: 'Eye' }],
+    dentist:     [{ k: 'dental', icon: '🦷', label: 'Dental' }]
   };
   const defs = navs[role] || navs.nurse;
 
@@ -355,7 +347,7 @@ function switchTab(key) {
 }
 
 /* -------------------------------------------------------------------------
- * GREETING COMPONENT
+ * GREETING
  * ---------------------------------------------------------------------- */
 function greetingCard() {
   const hour = new Date().getHours();
@@ -492,8 +484,7 @@ function drawBpChart(m) {
         data: [m.bloodPressureProfile.normal, m.bloodPressureProfile.stage1HTN,
                m.bloodPressureProfile.stage2HTN, m.bloodPressureProfile.hypertensiveCrisis],
         backgroundColor: ['#10B981', '#0EA5E9', '#F59E0B', '#EF4444'],
-        borderWidth: 0,
-        spacing: 2
+        borderWidth: 0, spacing: 2
       }]
     },
     options: {
@@ -515,9 +506,7 @@ function drawSugarChart(m) {
         data: [m.glycemicControlProfile.normal, m.glycemicControlProfile.preDiabetic,
                m.glycemicControlProfile.diabeticOrCritical],
         backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
-        borderRadius: 8,
-        borderSkipped: false,
-        barThickness: 44
+        borderRadius: 8, borderSkipped: false, barThickness: 44
       }]
     },
     options: {
@@ -698,21 +687,24 @@ async function submitReferral(e, patientId) {
 }
 
 /* -------------------------------------------------------------------------
- * STATION RENDERERS
+ * STATION NAV
  * ---------------------------------------------------------------------- */
 function stationNav(active) {
   const r = state.currentUser.role;
   const isAdmin = ['super_admin','coordinator'].includes(r);
   const pills = [];
-  if (isAdmin || r === 'nurse')      pills.push({ k: 'nurse',  icon: '🩺', label: 'Vitals' });
-  if (isAdmin || r === 'lab_tech')   pills.push({ k: 'lab',    icon: '🧪', label: 'Lab' });
-  if (isAdmin || r === 'optometrist')pills.push({ k: 'eye',    icon: '👁️', label: 'Eye' });
-  if (isAdmin || r === 'dentist')    pills.push({ k: 'dental', icon: '🦷', label: 'Dental' });
+  if (isAdmin || r === 'nurse')       pills.push({ k: 'nurse',  icon: '🩺', label: 'Vitals' });
+  if (isAdmin || r === 'lab_tech')    pills.push({ k: 'lab',    icon: '🧪', label: 'Lab' });
+  if (isAdmin || r === 'optometrist') pills.push({ k: 'eye',    icon: '👁️', label: 'Eye' });
+  if (isAdmin || r === 'dentist')     pills.push({ k: 'dental', icon: '🦷', label: 'Dental' });
   return `<div class="station-subnav">${pills.map(p =>
     `<button class="station-pill ${active === p.k ? 'active' : ''}" onclick="switchTab('${p.k}')">${p.icon} ${p.label}</button>`
   ).join('')}</div>`;
 }
 
+/* -------------------------------------------------------------------------
+ * NURSE
+ * ---------------------------------------------------------------------- */
 function renderNurse() {
   const v = document.getElementById('nurseView');
   v.classList.remove('hidden');
@@ -782,6 +774,9 @@ async function submitVitals(e) {
   } catch (err) { toast(err.message, 'error'); }
 }
 
+/* -------------------------------------------------------------------------
+ * LAB
+ * ---------------------------------------------------------------------- */
 function renderLab() {
   const v = document.getElementById('labView');
   v.classList.remove('hidden');
@@ -844,6 +839,9 @@ async function submitLab(e) {
   } catch (err) { toast(err.message, 'error'); }
 }
 
+/* -------------------------------------------------------------------------
+ * EYE
+ * ---------------------------------------------------------------------- */
 function renderEye() {
   const v = document.getElementById('eyeView');
   v.classList.remove('hidden');
@@ -894,6 +892,9 @@ async function submitEye(e) {
   } catch (err) { toast(err.message, 'error'); }
 }
 
+/* -------------------------------------------------------------------------
+ * DENTAL
+ * ---------------------------------------------------------------------- */
 function renderDental() {
   const v = document.getElementById('dentalView');
   v.classList.remove('hidden');
@@ -952,6 +953,9 @@ async function submitDental(e) {
   } catch (err) { toast(err.message, 'error'); }
 }
 
+/* -------------------------------------------------------------------------
+ * QUEUE LOADER
+ * ---------------------------------------------------------------------- */
 async function loadQueue(selectId, listId, stationKey) {
   try {
     const patients = await api('getPatientsForOutreach', { outreachId: '' });
@@ -1122,9 +1126,8 @@ function escapeHtml(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
   );
 }
-function escapeAttr(s) { return escapeHtml(s).replace(/'/g, '\\\''); }
+function escapeAttr(s) { return escapeHtml(s).replace(/'/g, "\\'"); }
 
-/* Password strength */
 document.addEventListener('input', (e) => {
   if (e.target.id === 'newPasswordInput') {
     const v = e.target.value;
@@ -1139,7 +1142,6 @@ document.addEventListener('input', (e) => {
   }
 });
 
-/* URL shortcuts */
 window.addEventListener('load', () => {
   const params = new URLSearchParams(location.search);
   const view = params.get('view');
