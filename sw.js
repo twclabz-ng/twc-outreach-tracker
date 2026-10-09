@@ -1,13 +1,10 @@
-/* ============================================================================
- * TWC Labs Outreach — Service Worker
- * CRITICAL: Never intercept Apps Script API calls.
- * ========================================================================== */
+/* TWC Labs Outreach — Service Worker
+ * Never intercept Apps Script API traffic. */
 
 const VERSION = 'v4.0.0';
 const SHELL_CACHE   = 'twc-shell-' + VERSION;
 const RUNTIME_CACHE = 'twc-runtime-' + VERSION;
 
-// Detect base path (works for GH Pages subdirectory OR custom domain)
 const BASE = self.location.pathname.replace(/\/sw\.js$/, '') || '';
 
 const SHELL_ASSETS = [
@@ -21,7 +18,6 @@ const SHELL_ASSETS = [
   BASE + '/icons/icon-512.png'
 ];
 
-/* --- INSTALL --- */
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(SHELL_CACHE)
@@ -30,42 +26,29 @@ self.addEventListener('install', (event) => {
   );
 });
 
-/* --- ACTIVATE --- */
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(k => k !== SHELL_CACHE && k !== RUNTIME_CACHE)
-            .map(k => caches.delete(k))
-      )
+      Promise.all(keys.filter(k => k !== SHELL_CACHE && k !== RUNTIME_CACHE).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
 
-/* --- FETCH --- */
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // ⚠️ CRITICAL: Never touch Google Apps Script API traffic
   if (
     url.hostname === 'script.google.com' ||
     url.hostname === 'script.googleusercontent.com' ||
     url.hostname.endsWith('.googleusercontent.com')
-  ) {
-    return; // let browser handle natively
-  }
+  ) return;
 
-  // Only handle GETs
   if (request.method !== 'GET') return;
 
-  // Skip cross-origin requests except the CDN/fonts we explicitly precache
   const sameOrigin = url.origin === self.location.origin;
-  if (!sameOrigin && !url.hostname.includes('jsdelivr') && !url.hostname.includes('fonts.')) {
-    return;
-  }
+  if (!sameOrigin && !url.hostname.includes('jsdelivr') && !url.hostname.includes('fonts.')) return;
 
-  // Navigation → network-first with shell fallback
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
@@ -80,7 +63,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets → cache-first
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
@@ -95,12 +77,10 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-/* --- MESSAGING --- */
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
-/* --- PUSH --- */
 self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};
   event.waitUntil(
